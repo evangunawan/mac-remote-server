@@ -45,6 +45,9 @@ let lastScrollY = 0;
 let lastScrollZoneY = 0;
 let lastPinchDist = 0;
 
+// Scroll sensitivity multiplier (lower = slower scrolling)
+const SCROLL_SENSITIVITY = 0.4;
+
 // Initialize Theme from localStorage
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
@@ -196,9 +199,11 @@ trackpad.addEventListener('touchmove', (e) => {
         const x = (touch1.clientX + touch2.clientX) / 2;
         const y = (touch1.clientY + touch2.clientY) / 2;
         
-        // If they move too much, cancel the right-click two-finger tap detection
+        // If they move too much, cancel the right-click two-finger tap detection.
+        // Threshold is generous: two-finger taps naturally wobble as the fingers
+        // land/lift out of sync, and a tight bound would cancel almost every tap.
         const moveDist = Math.sqrt(Math.pow(x - twoFingerStartX, 2) + Math.pow(y - twoFingerStartY, 2));
-        if (moveDist > 6) {
+        if (moveDist > 20) {
             isTwoFingerTouching = false;
         }
 
@@ -216,7 +221,7 @@ trackpad.addEventListener('touchmove', (e) => {
             lastPinchDist = dist;
         } else if (Math.abs(scrollDx) > 1 || Math.abs(scrollDy) > 1) {
             // Scroll action
-            send({ action: 'scroll', dx: -Math.round(scrollDx), dy: -Math.round(scrollDy) });
+            send({ action: 'scroll', dx: -Math.round(scrollDx * SCROLL_SENSITIVITY), dy: -Math.round(scrollDy * SCROLL_SENSITIVITY) });
         }
         
         lastScrollX = x;
@@ -229,8 +234,8 @@ trackpad.addEventListener('touchend', (e) => {
     if (isTwoFingerTouching) {
         isTwoFingerTouching = false;
         const duration = Date.now() - twoFingerTouchStartTime;
-        
-        if (duration < 250) {
+
+        if (duration < 400) {
             send({ action: 'click', button: 'right' });
             preventOneFingerClick = true;
             setTimeout(() => {
@@ -267,7 +272,8 @@ scrollZone.addEventListener('touchmove', (e) => {
     e.preventDefault();
     if (e.touches.length === 1) {
         const y = e.touches[0].clientY;
-        const dy = (y - lastScrollZoneY) * 1.8;
+        // Strip is a dedicated scroller, so keep it a touch faster than the trackpad.
+        const dy = (y - lastScrollZoneY) * (SCROLL_SENSITIVITY * 2);
         
         // Vertical scroll only. Invert direction for natural scroll behavior.
         send({ action: 'scroll', dx: 0, dy: -Math.round(dy) });

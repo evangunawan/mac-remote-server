@@ -231,8 +231,8 @@ int IsProcessTrusted() {
 */
 import "C"
 import (
-	"log"
 	"mac-remote-server/internal/domain/input"
+	"mac-remote-server/internal/logging"
 	"os/exec"
 	"strings"
 	"unsafe"
@@ -286,7 +286,7 @@ func runAppleScriptWithFallback(script string, fallbackKey int) {
 	cmd := exec.Command("osascript", "-e", script)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("DEBUG: AppleScript error: %v, output: %q\n", err, strings.TrimSpace(string(out)))
+		logging.Debugf("AppleScript error: %v, output: %q\n", err, strings.TrimSpace(string(out)))
 	}
 	if err == nil && strings.TrimSpace(string(out)) == "controlled" {
 		return

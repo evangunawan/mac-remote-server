@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"mac-remote-server/internal/domain/input"
+	"mac-remote-server/internal/logging"
 )
 
 var upgrader = websocket.Upgrader{
@@ -86,7 +87,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if msg.Action != "move" && msg.Action != "drag" {
-			log.Printf("DEBUG: WS Action received: %s (Payload: %+v)\n", msg.Action, msg)
+			logging.Debugf("WS Action received: %s (Payload: %+v)\n", msg.Action, msg)
 		}
 
 		switch msg.Action {

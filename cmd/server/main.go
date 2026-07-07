@@ -14,6 +14,7 @@ import (
 	"github.com/getlantern/systray"
 	"mac-remote-server/internal/infrastructure/macos"
 	"mac-remote-server/internal/infrastructure/network"
+	"mac-remote-server/internal/logging"
 )
 
 //go:embed web/*
@@ -94,10 +95,13 @@ func main() {
 		portFlag := startCmd.String("port", "8025", "Port to listen on")
 		hostFlag := startCmd.String("host", "0.0.0.0", "Host address to bind to")
 		devFlag := startCmd.Bool("dev", false, "Serve assets directly from disk instead of embed")
+		debugFlag := startCmd.Bool("debug", false, "Enable verbose debug logging")
 
 		if err := startCmd.Parse(os.Args[2:]); err != nil {
 			log.Fatal("Failed to parse flags:", err)
 		}
+
+		logging.SetDebug(*debugFlag)
 
 		controller := macos.NewMacCursorController()
 

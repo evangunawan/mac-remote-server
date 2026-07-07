@@ -84,7 +84,10 @@ body {
         max-height: 100%;
         border-radius: 0;
         border: none;
-        padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)) 16px;
+        padding: calc(16px + env(safe-area-inset-top, 0px))
+                 calc(16px + env(safe-area-inset-right, 0px))
+                 calc(20px + env(safe-area-inset-bottom, 0px))
+                 calc(16px + env(safe-area-inset-left, 0px));
         gap: 16px;
     }
 }
@@ -424,6 +427,30 @@ body.light-mode .btn {
 @media (max-width: 600px) {
     .btn-mouse {
         height: 54px;
+    }
+
+    .media-container {
+        gap: 32px;
+        padding: 20px 16px;
+        overflow-y: auto;
+    }
+
+    .playback-controls {
+        gap: 24px;
+    }
+
+    .media-btn {
+        width: 60px;
+        height: 60px;
+    }
+
+    .play-btn {
+        width: 80px;
+        height: 80px;
+    }
+
+    .dpad-container {
+        margin-top: 8px;
     }
 }
 
