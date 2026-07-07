@@ -1,9 +1,10 @@
 package macos
 
 /*
-#cgo LDFLAGS: -framework ApplicationServices -framework CoreGraphics
+#cgo LDFLAGS: -framework ApplicationServices -framework CoreGraphics -framework Cocoa
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreGraphics/CoreGraphics.h>
+#include "media.h"
 #include <unistd.h>
 
 void MoveMouse(double dx, double dy) {
@@ -145,8 +146,11 @@ static const CGEventField kCGEventData1 = (CGEventField)149;
 static const CGEventField kCGEventData2 = (CGEventField)150;
 
 void SimulateMediaKey(int key) {
+    CGEventSourceRef src = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    if (!src) return;
+
     // Key Down event
-    CGEventRef keyDown = CGEventCreate(NULL);
+    CGEventRef keyDown = CGEventCreate(src);
     if (keyDown) {
         CGEventSetType(keyDown, NX_SYSDEFINED);
         CGEventSetIntegerValueField(keyDown, kCGEventSubtype, NX_SUBTYPE_AUX_CONTROL_BUTTONS);
@@ -157,7 +161,7 @@ void SimulateMediaKey(int key) {
     }
 
     // Key Up event
-    CGEventRef keyUp = CGEventCreate(NULL);
+    CGEventRef keyUp = CGEventCreate(src);
     if (keyUp) {
         CGEventSetType(keyUp, NX_SYSDEFINED);
         CGEventSetIntegerValueField(keyUp, kCGEventSubtype, NX_SUBTYPE_AUX_CONTROL_BUTTONS);
@@ -166,6 +170,8 @@ void SimulateMediaKey(int key) {
         CGEventPost(kCGHIDEventTap, keyUp);
         CFRelease(keyUp);
     }
+
+    CFRelease(src);
 }
 
 void TypeString(const char* text) {
@@ -225,7 +231,10 @@ int IsProcessTrusted() {
 */
 import "C"
 import (
+	"log"
 	"mac-remote-server/internal/domain/input"
+	"os/exec"
+	"strings"
 	"unsafe"
 )
 
@@ -273,28 +282,41 @@ func (m *MacCursorController) Zoom(direction string) {
 	}
 }
 
+func runAppleScriptWithFallback(script string, fallbackKey int) {
+	cmd := exec.Command("osascript", "-e", script)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("DEBUG: AppleScript error: %v, output: %q\n", err, strings.TrimSpace(string(out)))
+	}
+	if err == nil && strings.TrimSpace(string(out)) == "controlled" {
+		return
+	}
+	// Fallback to Quartz media key simulation
+	C.SimulateMediaKey(C.int(fallbackKey))
+}
+
 func (m *MacCursorController) PlayPause() {
-	C.SimulateMediaKey(16)
+	C.SimulateNativeMediaKey(16) // NX_KEYTYPE_PLAY
 }
 
 func (m *MacCursorController) NextTrack() {
-	C.SimulateMediaKey(19)
+	C.SimulateNativeMediaKey(17) // NX_KEYTYPE_NEXT
 }
 
 func (m *MacCursorController) PreviousTrack() {
-	C.SimulateMediaKey(20)
+	C.SimulateNativeMediaKey(18) // NX_KEYTYPE_PREVIOUS
 }
 
 func (m *MacCursorController) VolumeUp() {
-	C.SimulateMediaKey(0)
+	C.SimulateNativeMediaKey(0) // NX_KEYTYPE_SOUND_UP
 }
 
 func (m *MacCursorController) VolumeDown() {
-	C.SimulateMediaKey(1)
+	C.SimulateNativeMediaKey(1) // NX_KEYTYPE_SOUND_DOWN
 }
 
 func (m *MacCursorController) Mute() {
-	C.SimulateMediaKey(7)
+	C.SimulateNativeMediaKey(7) // NX_KEYTYPE_MUTE
 }
 
 func (m *MacCursorController) TypeString(text string) {

@@ -34,7 +34,7 @@ func main() {
 	switch subcommand {
 	case "start":
 		startCmd := flag.NewFlagSet("start", flag.ExitOnError)
-		portFlag := startCmd.String("port", "8080", "Port to listen on")
+		portFlag := startCmd.String("port", "8025", "Port to listen on")
 		hostFlag := startCmd.String("host", "0.0.0.0", "Host address to bind to")
 		devFlag := startCmd.Bool("dev", false, "Serve assets directly from disk instead of embed")
 

@@ -85,6 +85,10 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		if msg.Action != "move" && msg.Action != "drag" {
+			log.Printf("DEBUG: WS Action received: %s (Payload: %+v)\n", msg.Action, msg)
+		}
+
 		switch msg.Action {
 		case "move":
 			s.controller.Move(msg.Dx, msg.Dy)
