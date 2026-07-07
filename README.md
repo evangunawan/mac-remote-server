@@ -50,7 +50,4 @@ Once running, connect your phone/tablet to the same Wi-Fi network and scan/visit
 
 ---
 
-## ✍️ Authorship
-
-> [!NOTE]
-> This entire application, including the Cgo native macOS integrations, the Clean Architecture Go server, and the dynamic glassmorphic web UI, was authored and refined by **Gemini 3.5 Flash**.
+*This application was built and refined by **Gemini 3.5 Flash** using **Google Antigravity**.*
