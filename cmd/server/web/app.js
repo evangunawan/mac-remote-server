@@ -99,40 +99,115 @@ modalSettings.addEventListener('click', (e) => {
     }
 });
 
+// WebSocket connection management variables
+let reconnectTimer = null;
+let pingInterval = null;
+
 // Establish WebSocket Connection
-function connect() {
+function connect(force = false) {
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+    }
+
+    if (ws) {
+        if (ws.readyState === WebSocket.OPEN) {
+            return;
+        }
+        if (ws.readyState === WebSocket.CONNECTING && !force) {
+            return;
+        }
+        // Clean up listeners on old socket
+        ws.onopen = null;
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.onmessage = null;
+        try {
+            ws.close();
+        } catch (e) {}
+    }
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
+
     statusTextEl.textContent = 'Connecting...';
     statusEl.className = 'status disconnected';
-    
-    ws = new WebSocket(wsUrl);
-    
+
+    try {
+        ws = new WebSocket(wsUrl);
+    } catch (e) {
+        scheduleReconnect(1000);
+        return;
+    }
+
     ws.onopen = () => {
         statusTextEl.textContent = 'Connected';
         statusEl.className = 'status connected';
         console.log('Connected to Mac Remote Server');
+        startPing();
     };
-    
+
     ws.onclose = () => {
+        stopPing();
         statusTextEl.textContent = 'Disconnected';
         statusEl.className = 'status disconnected';
-        console.log('Connection lost. Reconnecting in 3s...');
-        setTimeout(connect, 3000);
+        console.log('Connection lost. Reconnecting...');
+        scheduleReconnect(1000);
     };
-    
+
     ws.onerror = (err) => {
         console.error('WebSocket Error:', err);
     };
 }
 
-// WS Helper
+function scheduleReconnect(delay = 1000) {
+    if (reconnectTimer) return;
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connect();
+    }, delay);
+}
+
+function startPing() {
+    stopPing();
+    pingInterval = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            send({ action: 'ping' });
+        }
+    }, 5000);
+}
+
+function stopPing() {
+    if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+    }
+}
+
+// WS Helper with auto-reconnect on user interaction
 function send(msg) {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(msg));
+    } else if (msg.action !== 'ping') {
+        connect(true);
     }
 }
+
+// Handle iOS Safari tab backgrounding, tab switching, and focus resume
+function handleResume() {
+    if (document.visibilityState === 'visible') {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            connect(true);
+        } else {
+            send({ action: 'ping' });
+        }
+    }
+}
+
+document.addEventListener('visibilitychange', handleResume);
+window.addEventListener('pageshow', handleResume);
+window.addEventListener('focus', handleResume);
+window.addEventListener('online', () => connect(true));
 
 // Click buttons
 btnLeftClick.addEventListener('click', () => {

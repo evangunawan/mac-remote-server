@@ -35,15 +35,21 @@ A lightweight, native macOS helper and dynamic web application that turns any mo
 *   **Operating System**: macOS (requires Quartz Event Services).
 *   **Permissions**: Accessibility access must be granted to the terminal or wrapper running the server under *System Settings > Privacy & Security > Accessibility*.
 
-### Running the App
-Run the pre-compiled standalone binary:
+### Installation & Running
+
+Build and install binary to `~/.local/bin/mac-remote-server`:
 ```bash
-./mac-remote-server start
+./install.sh
 ```
 
-For developer hot-reloading mode (reading web assets directly from the filesystem without recompilation):
+Run the server:
 ```bash
-./mac-remote-server start -dev
+mac-remote-server start
+```
+
+For developer hot-reloading mode (reading web assets directly from the filesystem):
+```bash
+mac-remote-server start -dev
 ```
 
 Once running, connect your phone/tablet to the same Wi-Fi network and scan/visit the IP address displayed on the server startup screen.

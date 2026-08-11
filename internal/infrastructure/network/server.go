@@ -86,11 +86,15 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if msg.Action != "move" && msg.Action != "drag" {
+		if msg.Action != "move" && msg.Action != "drag" && msg.Action != "ping" {
 			logging.Debugf("WS Action received: %s (Payload: %+v)\n", msg.Action, msg)
 		}
 
 		switch msg.Action {
+		case "ping":
+			s.clientsMu.Lock()
+			_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"action":"pong"}`))
+			s.clientsMu.Unlock()
 		case "move":
 			s.controller.Move(msg.Dx, msg.Dy)
 		case "drag":

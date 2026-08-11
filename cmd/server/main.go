@@ -26,6 +26,8 @@ var webAssets embed.FS
 //go:embed trayicon.png
 var trayIconBytes []byte
 
+var Version = "dev"
+
 const plistLabel = "My Mac Remote"
 
 var plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
@@ -101,11 +103,20 @@ func getRunningPID() (int, bool) {
 }
 
 func main() {
+	if len(os.Args) >= 2 {
+		arg := os.Args[1]
+		if arg == "-v" || arg == "--version" || arg == "-version" || arg == "version" {
+			fmt.Printf("mac-remote-server version %s\n", Version)
+			os.Exit(0)
+		}
+	}
+
 	flag.Usage = func() {
 		fmt.Printf("Usage: mac-remote-server <command> [options]\n\n")
 		fmt.Printf("Commands:\n")
-		fmt.Printf("  start     Start the remote mouse WebSocket server (-d to run in background)\n")
-		fmt.Printf("  stop      Stop the remote mouse WebSocket server running in the background\n\n")
+		fmt.Printf("  start        Start the remote mouse WebSocket server (-d to run in background)\n")
+		fmt.Printf("  stop         Stop the remote mouse WebSocket server running in the background\n")
+		fmt.Printf("  version, -v  Print version information\n\n")
 		fmt.Printf("Run 'mac-remote-server <command> -h' to see options for that command.\n")
 	}
 
