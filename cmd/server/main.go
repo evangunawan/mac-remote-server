@@ -234,8 +234,10 @@ func main() {
 
 		systray.Run(func() {
 			systray.SetIcon(trayIconBytes)
-			systray.SetTooltip("My Mac Remote")
+			systray.SetTooltip("My Mac Remote (" + Version + ")")
 
+			mVersion := systray.AddMenuItem("Version: "+Version, "Server version")
+			mVersion.Disable()
 			mURL := systray.AddMenuItem("Open: http://localhost:"+*portFlag, "Server address")
 			mURL.Disable()
 			systray.AddSeparator()
